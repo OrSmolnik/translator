@@ -1,0 +1,39 @@
+body {
+  font-family: sans-serif;
+  margin: 20px;
+  max-width: 400px;
+}
+
+h2 {
+  margin-bottom: 15px;
+}
+
+.input-row {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 8px;
+  font-size: 16px;
+}
+
+button {
+  margin-left: 5px;
+  padding: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#translateBtn {
+  margin-bottom: 15px;
+}
+
+#resultBox {
+  padding: 10px;
+  border: 1px solid #ccc;
+  min-height: 40px;
+  font-size: 16px;
+  white-space: pre-wrap; /* So newlines or multiple lines appear properly */
+}
