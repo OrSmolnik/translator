@@ -2,23 +2,127 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My GitHub Pages Site</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mini Translator</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       margin: 20px;
+      max-width: 400px;
     }
-    h1 {
-      color: #2c3e50;
+    .input-row {
+      display: flex;
+      margin-bottom: 10px;
     }
-    p {
-      color: #555;
+    input[type="text"] {
+      flex: 1;
+      padding: 8px;
+      font-size: 16px;
+    }
+    button {
+      margin-left: 5px;
+      padding: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #translateBtn {
+      margin-bottom: 15px;
+    }
+    #resultBox {
+      padding: 10px;
+      border: 1px solid #ccc;
+      min-height: 40px;
     }
   </style>
 </head>
 <body>
-  <h1>Hello from GitHub Pages!</h1>
-  <p>This is a simple website hosted on GitHub.</p>
+
+  <h2>Mini Translator (English ↔ Hebrew)</h2>
+  
+  <!-- Row with text input + paste button -->
+  <div class="input-row">
+    <input type="text" id="textInput" placeholder="Type or paste text...">
+    <button id="pasteBtn" title="Paste from Clipboard" onclick="pasteFromClipboard()">
+      📋
+    </button>
+  </div>
+
+  <!-- "Translate" button -->
+  <button id="translateBtn" onclick="onTranslateClick()">תרגם</button>
+
+  <!-- Area to show the translation result -->
+  <div id="resultBox"></div>
+
+  <script>
+    // Attempt to read from the system clipboard and put into the text input
+    function pasteFromClipboard() {
+      // Some older phones/browsers don't support navigator.clipboard
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText()
+          .then(text => {
+            document.getElementById('textInput').value = text;
+          })
+          .catch(err => {
+            alert('Unable to paste automatically. Please paste manually.');
+            console.error(err);
+          });
+      } else {
+        alert('Clipboard not supported on this device/browser.');
+      }
+    }
+
+    // When "תרגם" is clicked, decide if the text is English or Hebrew, then translate
+    function onTranslateClick() {
+      const textInput = document.getElementById('textInput').value.trim();
+      if (!textInput) {
+        alert('Please enter or paste some text.');
+        return;
+      }
+
+      // Check if the text has Hebrew letters (simple check)
+      // Hebrew range roughly \u0590-\u05FF
+      const hasHebrew = /[\u0590-\u05FF]/.test(textInput);
+
+      // If has Hebrew, treat it as Hebrew -> English, otherwise English -> Hebrew
+      const sourceLang = hasHebrew ? 'he' : 'en';
+      const targetLang = hasHebrew ? 'en' : 'he';
+
+      // Fake "translate" using a tiny dictionary approach or placeholders
+      // For a real app, replace with an API call
+      const translation = translateText(textInput, sourceLang, targetLang);
+
+      document.getElementById('resultBox').innerText = translation;
+    }
+
+    // A stub function for actual translation
+    // In production, call a real translation API (e.g., Google, Microsoft, etc.)
+    function translateText(text, fromLang, toLang) {
+      // Very small dictionary just for demonstration
+      const tinyDictionary = {
+        'hello': 'שלום',
+        'dog': 'כלב',
+        'cat': 'חתול',
+        'peace': 'שלום',
+        'love': 'אהבה',
+        
+        // Hebrew -> English samples
+        'שלום': 'shalom / hello',
+        'אהבה': 'love'
+      };
+
+      // If we have a direct match, return it, else pretend "No real dictionary"
+      // In reality, you'd do something like: 
+      //    call server or fetch real translation from an API
+      const lowerText = text.toLowerCase();
+      if (tinyDictionary[lowerText]) {
+        return tinyDictionary[lowerText];
+      } else {
+        // If "Hebrew to English" or "English to Hebrew" not found in dictionary
+        // We'll show a placeholder
+        return "Translation not found in tiny dictionary (use real API).";
+      }
+    }
+  </script>
+
 </body>
 </html>
