@@ -1,8 +1,3 @@
-// Set your own Google Cloud Translate API key here.
-// IMPORTANT: This is for demonstration only.
-// In production, do NOT expose your API key on the client side.
-const API_KEY = "YOUR_API_KEY_HERE";
-
 // On page load, attach event listeners
 window.onload = function() {
   const pasteBtn = document.getElementById("pasteBtn");
@@ -12,9 +7,8 @@ window.onload = function() {
   translateBtn.addEventListener("click", onTranslateClick);
 };
 
-// Attempt to read from the system clipboard and put into the text input
+// Attempt to read from the system clipboard and put it into the text input
 function pasteFromClipboard() {
-  // Some older phones/browsers may not support navigator.clipboard
   if (navigator.clipboard && navigator.clipboard.readText) {
     navigator.clipboard.readText()
       .then(text => {
@@ -29,62 +23,53 @@ function pasteFromClipboard() {
   }
 }
 
-// Detect if text contains Hebrew characters
-// Hebrew range roughly \u0590-\u05FF
+// Quick check: if the text has Hebrew characters
 function hasHebrewChars(text) {
   return /[\u0590-\u05FF]/.test(text);
 }
 
-// When "תרגם" is clicked, decide if the text is English or Hebrew, then call the translation API
-function onTranslateClick() {
+// When "תרגם" is clicked, decide if the text is English or Hebrew, then translate
+async function onTranslateClick() {
   const textInput = document.getElementById("textInput").value.trim();
   if (!textInput) {
     alert("Please enter or paste some text.");
     return;
   }
 
-  // If it has Hebrew, treat it as Hebrew -> English, otherwise English -> Hebrew
-  const sourceLang = hasHebrewChars(textInput) ? "he" : "en";
-  const targetLang = (sourceLang === "he") ? "en" : "he";
-
-  // Call Google Translate API
-  translateText(textInput, sourceLang, targetLang)
-    .then(translation => {
-      document.getElementById("resultBox").innerText = translation;
-    })
-    .catch(err => {
-      console.error("Translation error:", err);
-      document.getElementById("resultBox").innerText = 
-        "Error translating. Check console or API settings.";
-    });
+  // If there's Hebrew, treat it as Hebrew -> English; else English -> Hebrew
+  const targetLang = hasHebrewChars(textInput) ? "en" : "he";
+  
+  // Call LibreTranslate API
+  try {
+    const translatedText = await translateText(textInput, targetLang);
+    document.getElementById("resultBox").innerText = translatedText;
+  } catch (error) {
+    console.error("Translation error:", error);
+    document.getElementById("resultBox").innerText = 
+      "Error translating. Check console or API settings.";
+  }
 }
 
-// Uses the Google Translate REST API
-// For more info: https://cloud.google.com/translate/docs/reference/rest
-async function translateText(text, fromLang, toLang) {
-  const url = `https://translation.googleapis.com/language/translate/v2?key=${API_KEY}`;
-
-  const requestBody = {
+// Actual call to LibreTranslate
+async function translateText(text, target) {
+  const url = "https://libretranslate.com/translate";
+  const bodyData = {
     q: text,
-    source: fromLang,
-    target: toLang,
-    format: "text"
+    source: "auto",   // Let the API detect automatically
+    target: target,   // either "he" or "en"
+    format: "text",
+    alternatives: 3,
+    api_key: ""       // no API key needed for the public instance, but keep an eye on usage
   };
 
-  const response = await fetch(url, {
+  const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(requestBody)
+    body: JSON.stringify(bodyData),
+    headers: { "Content-Type": "application/json" }
   });
 
-  const data = await response.json();
+  const data = await res.json();
 
-  // Google returns something like:
-  // data: { translations: [ { translatedText: "..." } ] }
-  if (data.error) {
-    throw new Error(data.error.message || "Unknown error from API");
-  }
-
-  const translatedText = data.data.translations[0].translatedText;
-  return translatedText;
+  // data.translatedText is the final translation
+  return data.translatedText || "";
 }
